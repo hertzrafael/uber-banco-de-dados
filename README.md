@@ -1,0 +1,2 @@
+# uber-banco-de-dados
+Projeto final da disciplina de Banco de Dados da Universidade. Aplicação dos conceitos de normalização, construção do banco e criação de queries para manipulação e análise do banco de dados.
