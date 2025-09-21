@@ -18,13 +18,18 @@ def main():
 
     load = Load()
 
-    db_path = os.getenv("DB_PATH")
+    #db_path = os.getenv("DB_PATH")
 
-    conection = f"sqlite:///{db_path}"
+    #conection = f"sqlite:///{db_path}"
+
+    #for name, frame in transform.init_transform():
+    #    load.upload_frame(conection, frame, name)
+    
+    db_path = os.path.join("C:/Users/Dogec/Documents", "banco de dados", "uber.db")
 
     for name, frame in transform.init_transform():
-        load.upload_frame(conection, frame, name)
-    
+        load.create_table_from_dataframe(frame, db_path, name)
+
 
 if __name__ == '__main__':
     main()
