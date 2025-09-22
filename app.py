@@ -1,5 +1,8 @@
 from source.extract import Extract
 from source.transform import Transform
+from source.load import Load
+import os
+from dotenv import load_dotenv
 
 def main():
     extract = Extract()
@@ -13,10 +16,20 @@ def main():
         car_model_columns=['Vehicle Type']
     )
 
-    for name, frame in transform.init_transform():
-        print(name, frame.columns)
+    load = Load()
 
+    #db_path = os.getenv("DB_PATH")
+
+    #conection = f"sqlite:///{db_path}"
+
+    #for name, frame in transform.init_transform():
+    #    load.upload_frame(conection, frame, name)
     
+    db_path = os.path.join("C:/Users/Dogec/Documents", "banco de dados", "uber.db")
+
+    for name, frame in transform.init_transform():
+        load.create_table_from_dataframe(frame, db_path, name)
+
 
 if __name__ == '__main__':
     main()
