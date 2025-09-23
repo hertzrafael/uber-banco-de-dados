@@ -24,7 +24,7 @@ def main():
     #    print(frame.head(5))
     #    print('-'*20)
 
-    #load = Load()
+    load = Load()
 
     #db_path = os.getenv("DB_PATH")
 
@@ -33,11 +33,20 @@ def main():
     #for name, frame in transform.init_transform():
     #    load.upload_frame(conection, frame, name)
     
-    #db_path = os.path.join(os.getcwd(), "data", "uber.db")
+    db_path = os.path.join(os.getcwd(), "data", "uber.db")
 
-    #for name, frame in transform.init_transform():
-    #    load.create_table_from_dataframe(frame, db_path, name)
+    for name, frame in transform.init_transform():
+        load.create_table(frame, db_path, name)
+        load.insert_data(frame, db_path, name)
+        
+    for table_name, df in transform.init_transform():
 
+        print(f"Selecionando dados da tabela '{table_name}':")
+        try:
+            result_df = load.select(db_path, table_name)
+            print(result_df)
+        except Exception as e:
+            print(f"Erro ao buscar dados da tabela '{table_name}': {e}")
 
 if __name__ == '__main__':
     main()

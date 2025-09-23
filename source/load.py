@@ -1,6 +1,7 @@
 import pandas as pd
 from sqlalchemy import create_engine
 import sqlite3
+import os
 
 class Load:
 
@@ -21,37 +22,79 @@ class Load:
             return "REAL"
         elif pd.api.types.is_bool_dtype(dtype):
             return "INTEGER"
-        elif pd.api.types.is_datetime64_any_dtype(dtype):
-            return "TEXT"  
         else:
             return "TEXT"
+        
+    def _verify_and_create_db(self, db_name):
+        """Verifica se o banco de dados existe. Se não, cria o banco de dados."""
+        if not os.path.exists(db_name):
 
-    def create_table_from_dataframe(self, df, db_name, table_name):
+            conn = sqlite3.connect(db_name)
+            conn.close()  
+            print(f"Banco de dados '{db_name}' criado com sucesso!")
+        else:
+            print(f"O banco de dados '{db_name}' já existe.")
 
-        if 'index' in df.columns:   # Index é uma palavra reservada do SQL, renomeando coluna para evitar erros.
+    def create_table(self, df, db_name, table_name):
+
+        if 'index' in df.columns:
             df = df.rename(columns={'index': 'idx'})
 
-        conn = sqlite3.connect(db_name)
-        cursor = conn.cursor()
+        self._verify_and_create_db(db_name)
 
-        columns = ', '.join([
-            f'"{col}" {self._map_dtype_to_sql(df[col].dtype)}'
-            for col in df.columns
-        ])  
-        create_table_sql = f'CREATE TABLE IF NOT EXISTS "{table_name}" ({columns})'
-        cursor.execute(create_table_sql)    # Executando Create Table
-        
-        for _, row in df.iterrows():
-            values = tuple(row)
+        with sqlite3.connect(db_name) as conn:
+            cursor = conn.cursor()
+
+            columns = ', '.join([
+                f'"{col}" {self._map_dtype_to_sql(df[col].dtype)}'
+                for col in df.columns
+            ])  
+
+            create_table_sql = f'CREATE TABLE IF NOT EXISTS "{table_name}" ({columns})'
+            cursor.execute(create_table_sql)
+
+            print(f"Tabela '{table_name}' criada com sucesso!")
+            print("Colunas:", columns)
+
+
+    def insert_data(self, df, db_name, table_name):
+
+        if 'index' in df.columns:
+            df = df.rename(columns={'index': 'idx'})
+
+        with sqlite3.connect(db_name) as conn:
+            cursor = conn.cursor()
+
             col_names = ', '.join([f'"{col}"' for col in df.columns])
             placeholders = ', '.join(['?' for _ in df.columns])
             insert_sql = f'INSERT INTO "{table_name}" ({col_names}) VALUES ({placeholders})'
-            cursor.execute(insert_sql, values)  # Executando Insert
+
+            cursor.executemany(insert_sql, df.values.tolist())
+
+            conn.commit()
+
+            print(f"Dados inseridos na tabela '{table_name}' com sucesso!")
+            print("Colunas:", col_names)
+
+    def select(self, db_name, table_name, columns='*', where=None):
         
-        conn.commit() # commitar mudanças
-        conn.close() # fechar conexão
+        if not os.path.exists(db_name):
+            raise FileNotFoundError(f"O banco de dados '{db_name}' não foi encontrado!")
+        
+        conn = sqlite3.connect(db_name)
+        cursor = conn.cursor()
 
-        print(columns)
-        print(col_names)
+        query = f'SELECT {columns} FROM "{table_name}"'
+        if where:
+            query += f' WHERE {where}'
 
-        print(f"Tabela '{table_name}' criada e dados inseridos com sucesso!")
+        cursor.execute(query)
+        rows = cursor.fetchall()
+        
+        col_names = [desc[0] for desc in cursor.description]
+
+        conn.close()
+
+        return pd.DataFrame(rows, columns=col_names)
+            
+          
