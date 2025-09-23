@@ -10,6 +10,6 @@ class Extract:
         frame = read_csv(file_path, sep=sep)
 
         print('Dataframe carregado com sucesso:')
-        print(frame.head(3))
+        print(frame.head(5))
 
         return frame

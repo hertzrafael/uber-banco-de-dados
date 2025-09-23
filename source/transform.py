@@ -24,26 +24,38 @@ class Transform:
     def init_transform(self) -> list[tuple[str, DataFrame]]:
         print('Iniciando transformação dos dataframes...')
 
-        reason = self.__create_new_frame__(self.frame, self.reason_columns, 'reason')
-        payment_method = self.__create_new_frame__(self.frame, self.payment_columns, 'method')
-        status = self.__create_new_frame__(self.frame, self.status_columns, 'status')
-        car_model = self.__create_new_frame__(self.frame, self.car_model_columns, 'model')
-        incomplete = self.__create_new_frame__(self.frame, self.incomplete_columns, 'incomplete')
-        #incomplete = self.__create_new_frame__(self.frame, self.incomplete_columns)
+        reason = self.__create_new_frame__(self.frame, self.reason_columns, 'reason', replace_original_frame=False)
+
+        payment_method = self.__create_new_frame__(self.frame, self.payment_columns, 'method', replace_name='payment_method')
+        print(payment_method.head(20))
+        status = self.__create_new_frame__(self.frame, self.status_columns, 'status', replace_name='booking_status')
+        car_model = self.__create_new_frame__(self.frame, self.car_model_columns, 'model', replace_name='car_model')
+        #incomplete = self.__create_new_frame__(self.frame, self.incomplete_columns, 'incomplete')
 
         cancel = self.__create_cancel_frame__(self.frame, reason)
         print('Transformação dos dataframes finalizada.')
+
+        #self.frame.to_csv('tmp/testing.csv')
 
         return [
             ('reason', reason),
             ('payment_method', payment_method),
             ('status', status),
             ('car_model', car_model),
-            ('incomplete', incomplete),
+            #('incomplete', incomplete),
             ('cancel', cancel)
         ]
 
-    def __create_new_frame__(self, frame: DataFrame, columns, result, increment_id=True, unique=True) -> DataFrame:
+    def __create_new_frame__(
+            self, 
+            frame: DataFrame, 
+            columns, 
+            result,
+            replace_original_frame=True,
+            replace_name='',
+            increment_id=True, 
+            unique=True
+    ) -> DataFrame:
         sep_columns = frame.filter(items=columns)
         unique_column = len(columns) == 1
 
@@ -68,7 +80,15 @@ class Transform:
             sep_columns = sep_columns.reset_index(drop=True)
             sep_columns['index'] = sep_columns.index
 
-        return sep_columns.rename(columns={0: result})
+        sep_columns = sep_columns.rename(columns={0: result})
+
+        if replace_original_frame:
+            mapping = dict(zip(sep_columns[result], sep_columns['index']))
+
+            self.frame[replace_name] = self.frame[columns[0]].map(mapping)
+            self.frame = self.frame.drop(columns, axis=1)
+
+        return sep_columns
 
     def __get_unique__(self, frame, column):
         return frame[column].dropna().unique()
