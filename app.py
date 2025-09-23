@@ -28,8 +28,17 @@ def main():
     db_path = os.path.join("C:/Users/Dogec/Documents", "banco de dados", "uber.db")
 
     for name, frame in transform.init_transform():
-        load.create_table_from_dataframe(frame, db_path, name)
+        load.create_table(frame, db_path, name)
+        load.insert_data(frame, db_path, name)
+        
+    for table_name, df in transform.init_transform():
 
+        print(f"Selecionando dados da tabela '{table_name}':")
+        try:
+            result_df = load.select(db_path, table_name)
+            print(result_df)
+        except Exception as e:
+            print(f"Erro ao buscar dados da tabela '{table_name}': {e}")
 
 if __name__ == '__main__':
     main()
