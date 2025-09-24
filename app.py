@@ -85,10 +85,13 @@ def main():
                     options=col_list
                 )
 
+                where_condition = st.text_input("WHERE", placeholder='Ex: column >= 3')
+                st.warning('Não insira o termo WHERE na caixa de texto acima, apenas as condições a serem verificadas.')
+
                 if st.button("Executar SELECT"):
                     try:
                         cols = ", ".join(selected_cols) if selected_cols else "*"
-                        df = load.select(st.session_state.db_name, table_name, cols)
+                        df = load.select(st.session_state.db_name, table_name, cols, where_condition)
                         st.success(f"{len(df)} linhas carregadas")
                         st.dataframe(df, use_container_width=True)
                     except Exception as e:

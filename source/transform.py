@@ -38,6 +38,7 @@ class Transform:
         #self.frame.to_csv('tmp/testing.csv')
 
         return [
+            ('rides', self.frame),
             ('reason', reason),
             ('payment_method', payment_method),
             ('status', status),
